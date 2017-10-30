@@ -15,10 +15,12 @@ else
 fi
 
 ### Append to prepare.sh:
+# Arch: gtk2-engines-pixbuf provided by gtk2 package
 install --minimal evolution-data-server gnome-control-center \
-        gnome-screensaver gnome-session $legacy_session_package \
-        gnome-shell gnome-themes-standard gvfs-backends nautilus \
-        unzip gtk2-engines-pixbuf pulseaudio
+        gnome-screensaver gnome-session \
+        arch=,$legacy_session_package \
+        gnome-shell gnome-themes-standard arch=,gvfs-backends nautilus \
+        unzip arch=,gtk2-engines-pixbuf pulseaudio
 
 TIPS="$TIPS
 You can start GNOME via the startgnome host command: sudo startgnome

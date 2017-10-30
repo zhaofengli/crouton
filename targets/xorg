@@ -44,7 +44,11 @@ intelhasfbc=''
 pinmesa=''
 intelfbcsupport='y'
 if [ "${ARCH#arm}" = "$ARCH" ]; then
-    inteldriver="xserver-xorg-video-intel$backport"
+    if [ "${DISTROAKA:-"$DISTRO"}" = 'arch' ]; then
+        inteldriver="xf86-video-intel"
+    else
+        inteldriver="xserver-xorg-video-intel$backport"
+    fi
 
     # If the system has an Intel FBC-capable video card but has too old a driver
     # to support the chipset, we'll need to disable hardware acceleration.
@@ -68,10 +72,11 @@ if [ "${ARCH#arm}" = "$ARCH" ]; then
 fi
 
 # Catalog relevant and irrelevant video drivers
-fbdev="xserver-xorg-video-fbdev$backport"
+# Debian sid has modesetting built into xserver-xorg-core; Arch built into xorg-server
+fbdev="arch=xf86-video-fbdev,xserver-xorg-video-fbdev$backport"
 
 if release -lt sid -lt kali-rolling -lt vivid; then
-    modesetting="xserver-xorg-video-modesetting$backport"
+    modesetting="xserver-xorg-video-modesetting$backport,debian~sid+ubuntu~vivid+arch="
 else
     # modesetting is built into xserver-xorg-core
     modesetting=''
@@ -97,7 +102,7 @@ fi
 
 # On Freon, we need crazy xorg hacks
 if [ -n "$freon" ]; then
-    compile freon '-ldl -ldrm -I/usr/include/libdrm' so libdrm-dev
+    compile freon '-ldl -ldrm -I/usr/include/libdrm' so arch=libdrm,libdrm-dev
 fi
 
 # Pin precise's version of mesa if necessary
@@ -198,8 +203,9 @@ if [ -z "$inteldriver" -a -n "$backport" ] && release -eq precise; then
         x11-xserver-utils xauth xinit xfonts-utils xkb-data xorg-docs-core \
         xterm x11-common xinput
 else
-    install xorg $installvideodrivers -- xserver-xorg-video-all$backport \
+    install xorg $installvideodrivers -- arch=,xserver-xorg-video-all$backport \
         $vmmouse
+    install arch=ttf-dejavu
 fi
 
 # Remove bad video drivers
@@ -233,7 +239,9 @@ if [ -n "$freon" -a -e "$inteldrv" ]; then
     if grep -F -q -a 'getuid0' "$inteldrv" 2>/dev/null; then
         # Hold xserver-xorg-video-intel to make sure that the modification
         # (which may have been made in a previous update) does not get erased.
-        apt-mark hold "$inteldriver"
+        if [ "${DISTROAKA:-"$DISTRO"}" = 'debian' ]; then
+            apt-mark hold "$inteldriver"
+        fi
     fi
 fi
 
